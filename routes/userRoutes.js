@@ -8,16 +8,19 @@ import {
 } from "../controllers/userController.js";
 
 import { authenticateUser } from "../middlewares/authenticateUser.js";
+import { authorizeRole } from "../middlewares/authorizeRole.js";
 
 const router = express.Router();
 
 // Public
 router.post("/", createUser);
 
-// Authenticated only
-router.get("/", authenticateUser, getUsers);
+// Admin only
+router.get("/", authenticateUser, authorizeRole("admin"), getUsers);
+router.delete("/:id", authenticateUser, authorizeRole("admin"), deleteUser);
+
+// User or Admin
 router.get("/:id", authenticateUser, getUserById);
 router.put("/:id", authenticateUser, updateUser);
-router.delete("/:id", authenticateUser, deleteUser);
 
 export default router;
