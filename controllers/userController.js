@@ -1,52 +1,51 @@
 import User from "../models/user.js";
+import bcrypt from "bcryptjs";
 
-// Create User
 export const createUser = async (req, res) => {
   try {
-    const user = await User.create(req.body);
-    res.status(201).json(user);
+    const { name, email, password } = req.body;
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    res.status(201).json({
+      message: "User registered successfully",
+      userId: user._id,
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
 };
 
-// Get All Users
+// Get all users
 export const getUsers = async (req, res) => {
-  try {
-    const users = await User.find();
-    res.json(users);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  const users = await User.find().select("-password");
+  res.json(users);
 };
 
-// Get Single User
+// Get user by ID
 export const getUserById = async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  const user = await User.findById(req.params.id).select("-password");
+  res.json(user);
 };
 
-// Update User
+// Update user
 export const updateUser = async (req, res) => {
-  try {
-    const user = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+  const user = await User.findByIdAndUpdate(
+    req.params.id,
+    req.body,
+    { new: true }
+  );
+  res.json(user);
 };
 
-// Delete User
+// Delete user
 export const deleteUser = async (req, res) => {
-  try {
-    await User.findByIdAndDelete(req.params.id);
-    res.json({ message: "User deleted" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  await User.findByIdAndDelete(req.params.id);
+  res.json({ message: "User deleted" });
 };
