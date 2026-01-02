@@ -12,15 +12,15 @@ import { authorizeRole } from "../middlewares/authorizeRole.js";
 
 const router = express.Router();
 
-// Public
+// ✅ PUBLIC (Register)
 router.post("/", createUser);
 
-// Admin only
-router.get("/", authenticateUser, authorizeRole("admin"), getUsers);
-router.delete("/:id", authenticateUser, authorizeRole("admin"), deleteUser);
-
-// User or Admin
+// ✅ AUTHENTICATED USER
 router.get("/:id", authenticateUser, getUserById);
 router.put("/:id", authenticateUser, updateUser);
+
+// ✅ ADMIN ONLY
+router.get("/", authenticateUser, authorizeRole("admin"), getUsers);
+router.delete("/:id", authenticateUser, authorizeRole("admin"), deleteUser);
 
 export default router;

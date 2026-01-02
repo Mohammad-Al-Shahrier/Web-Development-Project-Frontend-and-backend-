@@ -1,6 +1,7 @@
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
 
 import userRoutes from "./routes/userRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
@@ -11,15 +12,14 @@ import authRoutes from "./routes/authRoutes.js";
 dotenv.config();
 
 const app = express();
+
 app.use(express.json());
+app.use(cookieParser()); // ✅ ADD THIS
 
 mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.log("MongoDB Connection Error:", err));
+  .catch((err) => console.log(err));
 
 app.use("/api/users", userRoutes);
 app.use("/api/products", productRoutes);
@@ -28,8 +28,10 @@ app.use("/api/carts", cartRoutes);
 app.use("/api/auth", authRoutes);
 
 app.get("/", (req, res) => {
-  res.send("E-commerce API Running Successfully!");
+  res.send("E-commerce API Running Successfully.");
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port http://localhost${PORT}`));
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, () =>
+  console.log(`Server running on http://localhost:${PORT}`)
+);
