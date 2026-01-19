@@ -1,11 +1,6 @@
 import Cart from "../models/cart.js";
 import Product from "../models/product.js";
 
-/**
- * @desc    Add items to cart (Create or Update)
- * @route   POST /api/carts
- * @access  Private (User)
- */
 export const addToCart = async (req, res) => {
   try {
     const userId = req.user._id;
@@ -15,7 +10,6 @@ export const addToCart = async (req, res) => {
       return res.status(400).json({ message: "Cart items are required" });
     }
 
-    // Validate products
     for (const item of items) {
       const product = await Product.findById(item.product);
       if (!product) {
@@ -25,11 +19,9 @@ export const addToCart = async (req, res) => {
       }
     }
 
-    // Check if cart already exists
     let cart = await Cart.findOne({ user: userId });
 
     if (cart) {
-      // Update existing cart
       items.forEach((newItem) => {
         const existingItem = cart.items.find(
           (item) => item.product.toString() === newItem.product
@@ -42,7 +34,6 @@ export const addToCart = async (req, res) => {
         }
       });
     } else {
-      // Create new cart
       cart = new Cart({
         user: userId,
         items,
@@ -56,11 +47,6 @@ export const addToCart = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get logged-in user's cart
- * @route   GET /api/carts
- * @access  Private (User)
- */
 export const getCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ user: req.user._id }).populate(
@@ -77,11 +63,6 @@ export const getCart = async (req, res) => {
   }
 };
 
-/**
- * @desc    Get single cart by ID (Admin or Owner)
- * @route   GET /api/carts/:id
- * @access  Private
- */
 export const getsingleCart = async (req, res) => {
   try {
     const cart = await Cart.findById(req.params.id).populate("items.product");
@@ -90,7 +71,6 @@ export const getsingleCart = async (req, res) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    // Allow only owner or admin
     if (
       cart.user.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
@@ -104,11 +84,6 @@ export const getsingleCart = async (req, res) => {
   }
 };
 
-/**
- * @desc    Update cart item quantity
- * @route   PUT /api/carts/update/:itemId
- * @access  Private (User)
- */
 export const updateCartItem = async (req, res) => {
   try {
     const { quantity } = req.body;
@@ -138,11 +113,6 @@ export const updateCartItem = async (req, res) => {
   }
 };
 
-/**
- * @desc    Clear logged-in user's cart
- * @route   DELETE /api/carts/clear
- * @access  Private (User)
- */
 export const clearCart = async (req, res) => {
   try {
     await Cart.findOneAndDelete({ user: req.user._id });

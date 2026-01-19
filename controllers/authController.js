@@ -2,7 +2,6 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 import generateToken from "../utils/generateToken.js";
 
-// LOGIN
 export const loginUser = async (req, res) => {
   const { email, password } = req.body;
 
@@ -31,7 +30,6 @@ export const loginUser = async (req, res) => {
   });
 };
 
-// LOGOUT
 export const logoutUser = (req, res) => {
   res.cookie("jwt", "", {
     httpOnly: true,

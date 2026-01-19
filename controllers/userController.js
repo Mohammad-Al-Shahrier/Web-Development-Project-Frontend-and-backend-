@@ -22,19 +22,16 @@ export const createUser = async (req, res) => {
   }
 };
 
-// Get all users
 export const getUsers = async (req, res) => {
   const users = await User.find().select("-password");
   res.json(users);
 };
 
-// Get user by ID
 export const getUserById = async (req, res) => {
   const user = await User.findById(req.params.id).select("-password");
   res.json(user);
 };
 
-// Update user
 export const updateUser = async (req, res) => {
   const user = await User.findByIdAndUpdate(
     req.params.id,
@@ -44,7 +41,6 @@ export const updateUser = async (req, res) => {
   res.json(user);
 };
 
-// Delete user
 export const deleteUser = async (req, res) => {
   await User.findByIdAndDelete(req.params.id);
   res.json({ message: "User deleted" });

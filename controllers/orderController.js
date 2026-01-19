@@ -11,8 +11,60 @@ export const createOrder = async (req, res) => {
 
 export const getOrders = async (req, res) => {
   try {
-    const orders = await Order.find().populate("user").populate("products.product");
-    res.json(orders);
+    let {
+      page = 1,
+      limit = 10,
+      status,
+      sort,
+      user,
+      minPrice,
+      maxPrice,
+    } = req.query;
+
+    page = Number(page);
+    limit = Number(limit);
+
+    const query = {};
+
+    if (status) {
+      query.status = status;
+    }
+
+    if (user) {
+      query.user = user;
+    }
+
+    if (minPrice || maxPrice) {
+      query.totalPrice = {};
+      if (minPrice) query.totalPrice.$gte = Number(minPrice);
+      if (maxPrice) query.totalPrice.$lte = Number(maxPrice);
+    }
+
+    const skip = (page - 1) * limit;
+
+    let sortOption = {};
+    if (sort) {
+      sortOption[sort.replace("-", "")] = sort.startsWith("-") ? -1 : 1;
+    } else {
+      sortOption = { createdAt: -1 };
+    }
+
+    const orders = await Order.find(query)
+      .populate("user")
+      .populate("products.product")
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Order.countDocuments(query);
+
+    res.json({
+      total,
+      page,
+      pages: Math.ceil(total / limit),
+      count: orders.length,
+      orders,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -20,8 +72,12 @@ export const getOrders = async (req, res) => {
 
 export const getOrderById = async (req, res) => {
   try {
-    const order = await Order.findById(req.params.id).populate("user").populate("products.product");
+    const order = await Order.findById(req.params.id)
+      .populate("user")
+      .populate("products.product");
+
     if (!order) return res.status(404).json({ message: "Order not found" });
+
     res.json(order);
   } catch (error) {
     res.status(500).json({ error: error.message });

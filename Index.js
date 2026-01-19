@@ -14,7 +14,7 @@ dotenv.config();
 const app = express();
 
 app.use(express.json());
-app.use(cookieParser()); // ✅ ADD THIS
+app.use(cookieParser());
 
 mongoose
   .connect(process.env.MONGO_URI)
