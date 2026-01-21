@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createOrder,
+  createOrderFromCart,
   getOrders,
   getOrderById,
   updateOrder,
@@ -12,11 +13,9 @@ import { authorizeRole } from "../middlewares/authorizeRole.js";
 
 const router = express.Router();
 
-// ✅ USER
 router.post("/", authenticateUser, createOrder);
+router.post("/from-cart", authenticateUser, createOrderFromCart);
 router.get("/:id", authenticateUser, getOrderById);
-
-// ✅ ADMIN
 router.get("/", authenticateUser, authorizeRole("admin"), getOrders);
 router.put("/:id", authenticateUser, authorizeRole("admin"), updateOrder);
 router.delete("/:id", authenticateUser, authorizeRole("admin"), deleteOrder);
