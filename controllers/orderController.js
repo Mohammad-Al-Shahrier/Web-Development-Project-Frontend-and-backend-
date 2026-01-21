@@ -2,7 +2,6 @@ import Order from "../models/order.js";
 import Product from "../models/product.js";
 import Cart from "../models/cart.js";
 
-
 export const createOrder = async (req, res) => {
   try {
     const { products } = req.body;
@@ -123,7 +122,6 @@ export const getOrderById = async (req, res) => {
   }
 };
 
-
 export const updateOrder = async (req, res) => {
   try {
     const order = await Order.findByIdAndUpdate(
@@ -137,7 +135,6 @@ export const updateOrder = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
-
 
 export const deleteOrder = async (req, res) => {
   try {
