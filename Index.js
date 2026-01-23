@@ -8,6 +8,8 @@ import productRoutes from "./routes/productRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import cartRoutes from "./routes/cartRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
+import couponRoutes from "./routes/couponRoutes.js";
+import inventoryRoutes from "./routes/inventoryRoutes.js";
 
 dotenv.config();
 
@@ -26,6 +28,8 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/carts", cartRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/coupons", couponRoutes);
+app.use("/api/inventory", inventoryRoutes); 
 
 app.get("/", (req, res) => {
   res.send("E-commerce API Running Successfully.");
