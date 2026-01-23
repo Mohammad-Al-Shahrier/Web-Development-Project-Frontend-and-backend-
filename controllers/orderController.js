@@ -1,6 +1,7 @@
 import Order from "../models/order.js";
 import Product from "../models/product.js";
 import Cart from "../models/cart.js";
+import Coupon from "../models/coupon.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -36,6 +37,8 @@ export const createOrder = async (req, res) => {
 
 export const createOrderFromCart = async (req, res) => {
   try {
+    const { couponCode, shippingAddress, paymentMethod } = req.body;
+
     const cart = await Cart.findOne({ user: req.user._id }).populate(
       "items.product"
     );
@@ -68,18 +71,61 @@ export const createOrderFromCart = async (req, res) => {
       totalPrice += product.price * item.quantity;
     }
 
+    let discount = 0;
+
+    if (couponCode) {
+      const coupon = await Coupon.findOne({
+        code: couponCode.toUpperCase(),
+        isActive: true,
+        expiryDate: { $gte: new Date() },
+      });
+
+      if (!coupon) {
+        return res.status(400).json({ message: "Invalid or expired coupon" });
+      }
+
+      if (coupon.usageLimit > 0 && coupon.usedCount >= coupon.usageLimit) {
+        return res
+          .status(400)
+          .json({ message: "Coupon usage limit exceeded" });
+      }
+
+      if (totalPrice < coupon.minOrderAmount) {
+        return res.status(400).json({
+          message: `Minimum order amount is ${coupon.minOrderAmount}`,
+        });
+      }
+
+      if (coupon.discountType === "percentage") {
+        discount = (totalPrice * coupon.discountValue) / 100;
+
+        if (coupon.maxDiscount) {
+          discount = Math.min(discount, coupon.maxDiscount);
+        }
+      } else {
+        discount = coupon.discountValue;
+      }
+
+      totalPrice -= discount;
+
+      coupon.usedCount += 1;
+      await coupon.save();
+    }
+
     const order = await Order.create({
       user: req.user._id,
       products,
       totalPrice,
-      shippingAddress: req.body.shippingAddress,
-      paymentMethod: req.body.paymentMethod || "COD",
+      shippingAddress,
+      paymentMethod: paymentMethod || "COD",
     });
 
     await Cart.findOneAndDelete({ user: req.user._id });
 
     res.status(201).json({
       message: "Order placed successfully from cart",
+      discountApplied: discount,
+      finalPrice: totalPrice,
       order,
     });
   } catch (error) {
