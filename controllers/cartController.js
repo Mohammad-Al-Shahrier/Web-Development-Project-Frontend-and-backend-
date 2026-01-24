@@ -10,21 +10,29 @@ export const addToCart = async (req, res) => {
       return res.status(400).json({ message: "Cart items are required" });
     }
 
+    const formattedItems = [];
+    let totalPrice = 0;
+
     for (const item of items) {
-      const product = await Product.findById(item.product);
+      const product = await Product.findById(item.productId);
       if (!product) {
-        return res.status(404).json({
-          message: `Product not found: ${item.product}`,
-        });
+        return res.status(404).json({ message: `Product not found: ${item.productId}` });
       }
+
+      formattedItems.push({
+        product: product._id,
+        quantity: item.quantity,
+      });
+
+      totalPrice += product.price * item.quantity;
     }
 
     let cart = await Cart.findOne({ user: userId });
 
     if (cart) {
-      items.forEach((newItem) => {
+      formattedItems.forEach((newItem) => {
         const existingItem = cart.items.find(
-          (item) => item.product.toString() === newItem.product
+          (item) => item.product.toString() === newItem.product.toString()
         );
 
         if (existingItem) {
@@ -33,10 +41,19 @@ export const addToCart = async (req, res) => {
           cart.items.push(newItem);
         }
       });
+
+      totalPrice = 0;
+      for (const item of cart.items) {
+        const product = await Product.findById(item.product);
+        totalPrice += product.price * item.quantity;
+      }
+
+      cart.totalPrice = totalPrice;
     } else {
       cart = new Cart({
         user: userId,
-        items,
+        items: formattedItems,
+        totalPrice,
       });
     }
 
@@ -49,9 +66,7 @@ export const addToCart = async (req, res) => {
 
 export const getCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ user: req.user._id }).populate(
-      "items.product"
-    );
+    const cart = await Cart.findOne({ user: req.user._id }).populate("items.product");
 
     if (!cart) {
       return res.status(404).json({ message: "Cart is empty" });
@@ -71,10 +86,7 @@ export const getsingleCart = async (req, res) => {
       return res.status(404).json({ message: "Cart not found" });
     }
 
-    if (
-      cart.user.toString() !== req.user._id.toString() &&
-      req.user.role !== "admin"
-    ) {
+    if (cart.user.toString() !== req.user._id.toString() && req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
@@ -105,8 +117,15 @@ export const updateCartItem = async (req, res) => {
     }
 
     item.quantity = quantity;
-    await cart.save();
 
+    let totalPrice = 0;
+    for (const i of cart.items) {
+      const product = await Product.findById(i.product);
+      totalPrice += product.price * i.quantity;
+    }
+    cart.totalPrice = totalPrice;
+
+    await cart.save();
     res.json(cart);
   } catch (error) {
     res.status(500).json({ error: error.message });
